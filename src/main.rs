@@ -7,6 +7,9 @@ struct Arguments {
     path: PathBuf,
 }
 
+// TODO: fix error: Error calculating size: Permission denied (os error 13);
+
+
 fn main() {
     let args = match parse_arguments() {
         Ok(args) => args,
@@ -21,7 +24,7 @@ fn main() {
         0
     });
 
-    println!("Path: {}, size: {}", args.path.display(), size);
+    println!("Path: {}, size: {} bytes", args.path.display(), size);
     println!("GoodBye!");
 }
 
@@ -37,22 +40,18 @@ fn parse_arguments() -> Result<Arguments, String> {
     }
 }
 
-
 fn calculate_size(path: &Path) -> io::Result<u64> {
     if path.is_file() {
         return Ok(fs::metadata(path)?.len());
     }
 
     if path.is_dir() {
-        let mut total_size = 0;
-        for entry in fs::read_dir(path)? {
+        fs::read_dir(path)?.try_fold(0, |acc, entry| {
             let entry = entry?;
             let path = entry.path();
-            total_size += calculate_size(&path)?;
-        }
-        return Ok(total_size);
+            calculate_size(&path).map(|size| acc + size)
+        })
+    } else {
+        Ok(0)
     }
-
-    // If not a file or directory, return 0
-    Ok(0)
 }
