@@ -38,11 +38,17 @@ fn calculate_size(path: &Path) -> io::Result<u64> {
     }
 
     if path.is_dir() {
-        fs::read_dir(path)?.try_fold(0, |acc, entry| {
+        let entries = fs::read_dir(path)?;
+        let mut total_size = 0;
+        for entry in entries {
             let entry = entry?;
             let path = entry.path();
-            calculate_size(&path).map(|size| acc + size)
-        })
+            total_size += calculate_size(&path).unwrap_or_else(|e| {
+                eprintln!("Error reading {}: {}", path.display(), e);
+                0
+            });
+        }
+        Ok(total_size)
     } else {
         Ok(0)
     }
