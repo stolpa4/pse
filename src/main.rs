@@ -43,6 +43,11 @@ fn calculate_size(path: &Path) -> io::Result<u64> {
         for entry in entries {
             let entry = entry?;
             let path = entry.path();
+
+            if fs::symlink_metadata(&path)?.file_type().is_symlink() {
+                continue; // Skip processing this path
+            }
+
             total_size += calculate_size(&path).unwrap_or_else(|e| {
                 eprintln!("Error reading {}: {}", path.display(), e);
                 0
