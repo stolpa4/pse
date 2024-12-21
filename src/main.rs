@@ -1,8 +1,8 @@
+use rayon::prelude::*;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
-use rayon::prelude::*;
 
 struct Arguments {
     path: PathBuf,
@@ -14,10 +14,7 @@ fn main() {
         std::process::exit(1);
     });
 
-    let size = calculate_size(&args.path).unwrap_or_else(|e| {
-        eprintln!("Error calculating size for {}: {}", args.path.display(), e);
-        std::process::exit(1);
-    });
+    let size = calculate_size(&args.path);
 
     println!("Path: {}, size: {} bytes", args.path.display(), size);
 }
@@ -34,17 +31,18 @@ fn parse_arguments() -> Result<Arguments, String> {
     }
 }
 
-fn calculate_size(path: &Path) -> std::io::Result<u64> {
+fn calculate_size(path: &Path) -> u64 {
     WalkDir::new(path)
         .follow_links(false)
         .into_iter()
-        .filter_map(|e| e.ok())
+        .filter_map(Result::ok)
         .par_bridge()
         .filter_map(|entry| {
-            match entry.metadata() {
-                Ok(metadata) if metadata.is_file() => Some(metadata.len()),
-                _ => None,
-            }
+            entry
+                .metadata()
+                .ok()
+                .filter(|meta| meta.is_file())
+                .map(|meta| meta.len())
         })
         .sum()
 }
