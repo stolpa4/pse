@@ -7,8 +7,6 @@ struct Arguments {
     path: PathBuf,
 }
 
-// TODO: fix error: Error calculating size: Permission denied (os error 13);
-
 
 fn main() {
     let args = match parse_arguments() {
@@ -20,7 +18,7 @@ fn main() {
     };
 
     let size = calculate_size(&args.path).unwrap_or_else(|e| {
-        eprintln!("Error calculating size: {}", e);
+        eprintln!("Error calculating {} size: {}", args.path.display(), e);
         0
     });
 
