@@ -1,7 +1,7 @@
 use std::env;
 use std::fs;
-use std::io;
 use std::path::{Path, PathBuf};
+use walkdir::WalkDir;
 
 struct Arguments {
     path: PathBuf,
@@ -32,29 +32,23 @@ fn parse_arguments() -> Result<Arguments, String> {
     }
 }
 
-fn calculate_size(path: &Path) -> io::Result<u64> {
-    if path.is_file() {
-        return Ok(fs::metadata(path)?.len());
-    }
+fn calculate_size(path: &Path) -> std::io::Result<u64> {
+    let mut total_size = 0;
 
-    if path.is_dir() {
-        let entries = fs::read_dir(path)?;
-        let mut total_size = 0;
-        for entry in entries {
-            let entry = entry?;
-            let path = entry.path();
+    for entry in WalkDir::new(path)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
+        let metadata = match entry.metadata() {
+            Ok(metadata) => metadata,
+            Err(_) => continue,
+        };
 
-            if fs::symlink_metadata(&path)?.file_type().is_symlink() {
-                continue; // Skip processing this path
-            }
-
-            total_size += calculate_size(&path).unwrap_or_else(|e| {
-                eprintln!("Error reading {}: {}", path.display(), e);
-                0
-            });
+        if metadata.is_file() {
+            total_size += metadata.len();
         }
-        Ok(total_size)
-    } else {
-        Ok(0)
     }
+
+    Ok(total_size)
 }
