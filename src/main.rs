@@ -2,6 +2,7 @@ use std::env;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::collections::VecDeque;
 
 struct Arguments {
     path: PathBuf,
@@ -33,40 +34,60 @@ fn parse_arguments() -> Result<Arguments, String> {
     }
 }
 
-fn calculate_size(path: &Path) -> io::Result<u64> {
-    if path.is_file() {
-        return Ok(fs::metadata(path)?.len());
-    }
+fn calculate_size(starting_path: &Path) -> io::Result<u64> {
+    let mut total_size = 0;
+    let mut dirs_to_visit = VecDeque::new();
+    dirs_to_visit.push_back(starting_path.to_path_buf());
 
-    if path.is_dir() {
-        let entries = fs::read_dir(path)?;
-        let mut total_size = 0;
-        for entry in entries {
-            let entry = entry?;
-            let path = entry.path();
-            let metadata = match entry.metadata() {
-                Ok(metadata) => metadata,
+    while let Some(path) = dirs_to_visit.pop_front() {
+        let metadata = match fs::metadata(&path) {
+            Ok(metadata) => metadata,
+            Err(e) => {
+                eprintln!("Error reading {}: {}", path.display(), e);
+                continue;
+            }
+        };
+
+        if metadata.is_file() {
+            total_size += metadata.len();
+        } else if metadata.is_dir() {
+            let entries = match fs::read_dir(&path) {
+                Ok(entries) => entries,
                 Err(e) => {
-                    eprintln!("Error reading {}: {}", path.display(), e);
+                    eprintln!("Error reading directory {}: {}", path.display(), e);
                     continue;
                 }
             };
+            for entry in entries {
+                let entry = match entry {
+                    Ok(entry) => entry,
+                    Err(e) => {
+                        eprintln!("Error processing entry: {}", e);
+                        continue;
+                    }
+                };
 
-            if metadata.file_type().is_symlink() {
-                continue;
+                let entry_metadata = match entry.metadata() {
+                    Ok(metadata) => metadata,
+                    Err(e) => {
+                        eprintln!("Error reading metadata for {}: {}", entry.path().display(), e);
+                        continue;
+                    }
+                };
+
+                if entry_metadata.file_type().is_symlink() {
+                    continue;
+                }
+
+                if entry_metadata.is_file() {
+                    total_size += entry_metadata.len();
+                } else if entry_metadata.is_dir() {
+                    dirs_to_visit.push_back(entry.path().to_path_buf());
+                }
             }
-
-            total_size += if metadata.is_file() {
-                metadata.len()
-            } else {
-                calculate_size(&path).unwrap_or_else(|e| {
-                    eprintln!("Error reading {}: {}", path.display(), e);
-                    0
-                })
-            };
         }
-        Ok(total_size)
-    } else {
-        Ok(0)
     }
+
+    Ok(total_size)
 }
+
