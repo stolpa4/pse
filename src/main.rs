@@ -1,8 +1,7 @@
-use rayon::prelude::*;
 use std::env;
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
-use walkdir::WalkDir;
 
 struct Arguments {
     path: PathBuf,
@@ -14,7 +13,10 @@ fn main() {
         std::process::exit(1);
     });
 
-    let size = calculate_size(&args.path);
+    let size = calculate_size(&args.path).unwrap_or_else(|e| {
+        eprintln!("Error calculating size for {}: {}", args.path.display(), e);
+        std::process::exit(1);
+    });
 
     println!("Path: {}, size: {} bytes", args.path.display(), size);
 }
@@ -31,18 +33,29 @@ fn parse_arguments() -> Result<Arguments, String> {
     }
 }
 
-fn calculate_size(path: &Path) -> u64 {
-    WalkDir::new(path)
-        .follow_links(false)
-        .into_iter()
-        .filter_map(Result::ok)
-        .par_bridge()
-        .filter_map(|entry| {
-            entry
-                .metadata()
-                .ok()
-                .filter(|meta| meta.is_file())
-                .map(|meta| meta.len())
-        })
-        .sum()
+fn calculate_size(path: &Path) -> io::Result<u64> {
+    if path.is_file() {
+        return Ok(fs::metadata(path)?.len());
+    }
+
+    if path.is_dir() {
+        let entries = fs::read_dir(path)?;
+        let mut total_size = 0;
+        for entry in entries {
+            let entry = entry?;
+            let path = entry.path();
+
+            if fs::symlink_metadata(&path)?.file_type().is_symlink() {
+                continue;
+            }
+
+            total_size += calculate_size(&path).unwrap_or_else(|e| {
+                eprintln!("Error reading {}: {}", path.display(), e);
+                0
+            });
+        }
+        Ok(total_size)
+    } else {
+        Ok(0)
+    }
 }
