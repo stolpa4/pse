@@ -44,15 +44,26 @@ fn calculate_size(path: &Path) -> io::Result<u64> {
         for entry in entries {
             let entry = entry?;
             let path = entry.path();
+            let metadata = match entry.metadata() {
+                Ok(metadata) => metadata,
+                Err(e) => {
+                    eprintln!("Error reading {}: {}", path.display(), e);
+                    continue;
+                }
+            };
 
-            if fs::symlink_metadata(&path)?.file_type().is_symlink() {
+            if metadata.file_type().is_symlink() {
                 continue;
             }
 
-            total_size += calculate_size(&path).unwrap_or_else(|e| {
-                eprintln!("Error reading {}: {}", path.display(), e);
-                0
-            });
+            total_size += if metadata.is_file() {
+                metadata.len()
+            } else {
+                calculate_size(&path).unwrap_or_else(|e| {
+                    eprintln!("Error reading {}: {}", path.display(), e);
+                    0
+                })
+            };
         }
         Ok(total_size)
     } else {
