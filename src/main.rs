@@ -1,6 +1,5 @@
 use std::env;
 use std::fs;
-use std::io;
 use std::path::{Path, PathBuf};
 use std::collections::VecDeque;
 
@@ -14,10 +13,7 @@ fn main() {
         std::process::exit(1);
     });
 
-    let size = calculate_size(&args.path).unwrap_or_else(|e| {
-        eprintln!("Error calculating size for {}: {}", args.path.display(), e);
-        std::process::exit(1);
-    });
+    let size = calculate_size(&args.path);
 
     println!("Path: {}, size: {} bytes", args.path.display(), size);
 }
@@ -34,60 +30,56 @@ fn parse_arguments() -> Result<Arguments, String> {
     }
 }
 
-fn calculate_size(starting_path: &Path) -> io::Result<u64> {
+fn calculate_size(starting_path: &Path) -> u64 {
     let mut total_size = 0;
     let mut dirs_to_visit = VecDeque::new();
     dirs_to_visit.push_back(starting_path.to_path_buf());
 
     while let Some(path) = dirs_to_visit.pop_front() {
-        let metadata = match fs::metadata(&path) {
-            Ok(metadata) => metadata,
-            Err(e) => {
-                eprintln!("Error reading {}: {}", path.display(), e);
+        let (size, subdirs) = process_path(&path);
+        total_size += size;
+        dirs_to_visit.extend(subdirs);
+     }
+
+    total_size
+}
+
+#[inline(always)]
+fn process_path(path: &Path) -> (u64, Vec<PathBuf>) {
+    let mut size = 0;
+    let mut subdirs = Vec::new();
+
+    let metadata = match fs::metadata(path) {
+        Ok(m) => m,
+        Err(_) => return (0, subdirs),
+    };
+
+    if metadata.is_file() {
+        return (metadata.len(), subdirs);
+    }
+
+    if !metadata.is_dir() {
+        return (0, subdirs);
+    }
+
+    if let Ok(entries) = fs::read_dir(path) {
+        for entry in entries.filter_map(Result::ok) {
+            let entry_metadata = match entry.metadata() {
+                Ok(m) => m,
+                Err(_) => continue,
+            };
+
+            if entry_metadata.file_type().is_symlink() {
                 continue;
             }
-        };
 
-        if metadata.is_file() {
-            total_size += metadata.len();
-        } else if metadata.is_dir() {
-            let entries = match fs::read_dir(&path) {
-                Ok(entries) => entries,
-                Err(e) => {
-                    eprintln!("Error reading directory {}: {}", path.display(), e);
-                    continue;
-                }
-            };
-            for entry in entries {
-                let entry = match entry {
-                    Ok(entry) => entry,
-                    Err(e) => {
-                        eprintln!("Error processing entry: {}", e);
-                        continue;
-                    }
-                };
-
-                let entry_metadata = match entry.metadata() {
-                    Ok(metadata) => metadata,
-                    Err(e) => {
-                        eprintln!("Error reading metadata for {}: {}", entry.path().display(), e);
-                        continue;
-                    }
-                };
-
-                if entry_metadata.file_type().is_symlink() {
-                    continue;
-                }
-
-                if entry_metadata.is_file() {
-                    total_size += entry_metadata.len();
-                } else if entry_metadata.is_dir() {
-                    dirs_to_visit.push_back(entry.path().to_path_buf());
-                }
+            if entry_metadata.is_file() {
+                size += entry_metadata.len();
+            } else if entry_metadata.is_dir() {
+                subdirs.push(entry.path());
             }
         }
     }
 
-    Ok(total_size)
+    (size, subdirs)
 }
-
