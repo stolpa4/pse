@@ -7,23 +7,17 @@ struct Arguments {
     path: PathBuf,
 }
 
-
 fn main() {
-    let args = match parse_arguments() {
-        Ok(args) => args,
-        Err(err) => {
-            eprintln!("Error: {}", err);
-            std::process::exit(1);
-        }
-    };
-
+    let args = parse_arguments().unwrap_or_else(|err| {
+        eprintln!("Error: {}", err);
+        std::process::exit(1);
+    });
     let size = calculate_size(&args.path).unwrap_or_else(|e| {
-        eprintln!("Error calculating {} size: {}", args.path.display(), e);
-        0
+        eprintln!("Error calculating size for {}: {}", args.path.display(), e);
+        std::process::exit(1);
     });
 
     println!("Path: {}, size: {} bytes", args.path.display(), size);
-    println!("GoodBye!");
 }
 
 fn parse_arguments() -> Result<Arguments, String> {
