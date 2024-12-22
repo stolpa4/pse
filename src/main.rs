@@ -1,5 +1,6 @@
 mod cli;
 mod proc;
+mod utils;
 
 fn main() {
     let args = cli::parse_arguments().unwrap_or_else(|err| {
@@ -9,5 +10,5 @@ fn main() {
 
     let size = proc::calculate_bulk_size(&args.path);
 
-    println!("Path: {}, size: {} bytes", args.path.display(), size);
+    println!("Path: {}, size: {}", args.path.display(), utils::size_to_label(size));
 }
