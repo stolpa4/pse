@@ -1,6 +1,24 @@
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
+
+struct File {
+    path: String,
+    size: u64,
+}
+
+struct Directory {
+    path: String,
+    size: u64,
+    content: HashMap<String, FsEntry>,
+}
+
+enum FsEntry {
+    File(File),
+    Directory(Directory),
+}
+
+type FsTree = HashMap<String, FsEntry>;
 
 pub fn calculate_bulk_size(path: &Path) -> u64 {
     let mut total_size = 0;
@@ -8,7 +26,7 @@ pub fn calculate_bulk_size(path: &Path) -> u64 {
     dirs_to_visit.push_back(path.to_path_buf());
 
     while let Some(path) = dirs_to_visit.pop_front() {
-        let (size, subdirs) = process_path(&path);
+        let (size, subdirs) = _cbs_process_path(&path);
         total_size += size;
         dirs_to_visit.extend(subdirs);
     }
@@ -17,7 +35,7 @@ pub fn calculate_bulk_size(path: &Path) -> u64 {
 }
 
 #[inline(always)]
-fn process_path(path: &Path) -> (u64, Vec<PathBuf>) {
+fn _cbs_process_path(path: &Path) -> (u64, Vec<PathBuf>) {
     let mut size = 0;
     let mut subdirs = Vec::new();
 
