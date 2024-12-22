@@ -1,16 +1,11 @@
 mod cli;
 
 use std::collections::VecDeque;
-use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-struct Arguments {
-    path: PathBuf,
-}
-
 fn main() {
-    let args = parse_arguments().unwrap_or_else(|err| {
+    let args = cli::parse_arguments().unwrap_or_else(|err| {
         eprintln!("Error: {}", err);
         std::process::exit(1);
     });
@@ -18,21 +13,6 @@ fn main() {
     let size = calculate_size(&args.path);
 
     println!("Path: {}, size: {} bytes", args.path.display(), size);
-}
-
-fn parse_arguments() -> Result<Arguments, String> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
-        return Err(format!(
-            "Usage: {} <path> [mode(plain/content/recursive, default - plain)]",
-            args[0]
-        ));
-    }
-
-    match fs::canonicalize(Path::new(&args[1])) {
-        Ok(path) => Ok(Arguments { path }),
-        Err(e) => Err(format!("Failed to resolve path: {}", e)),
-    }
 }
 
 fn calculate_size(starting_path: &Path) -> u64 {
