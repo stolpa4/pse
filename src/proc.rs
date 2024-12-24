@@ -2,23 +2,23 @@ use std::collections::{HashMap, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-struct File {
-    path: String,
-    size: u64,
+pub struct File {
+    pub path: String,
+    pub size: u64,
 }
 
-struct Directory {
-    path: String,
-    size: u64,
-    content: HashMap<String, FsEntry>,
+pub struct Directory {
+    pub path: String,
+    pub size: u64,
+    pub content: HashMap<String, FsEntry>,
 }
 
-enum FsEntry {
+pub enum FsEntry {
     File(File),
     Directory(Directory),
 }
 
-type FsTree = HashMap<String, FsEntry>;
+pub type FsTree = HashMap<String, FsEntry>;
 
 pub fn calculate_bulk_size(path: &Path) -> u64 {
     let mut total_size = 0;
@@ -92,7 +92,7 @@ pub fn build_fs_tree(path: &Path) -> FsTree {
     }
 
     if metadata.is_file() {
-        add_file_to_fs_tree(&mut fs_tree, &path, &metadata);
+        add_file_to_fs_tree(&mut fs_tree, &path, metadata.len());
     } else if metadata.is_dir() {
         add_dir_to_fs_tree(&mut fs_tree, &path);
     }
@@ -101,7 +101,7 @@ pub fn build_fs_tree(path: &Path) -> FsTree {
 }
 
 #[inline(always)]
-fn add_file_to_fs_tree(fs_tree: &mut FsTree, path: &Path, metadata: &fs::Metadata) {
+fn add_file_to_fs_tree(fs_tree: &mut FsTree, path: &Path, size: u64) {
     fs_tree.insert(
         path.file_name()
             .unwrap_or(path.as_os_str())
@@ -109,7 +109,7 @@ fn add_file_to_fs_tree(fs_tree: &mut FsTree, path: &Path, metadata: &fs::Metadat
             .to_string(),
         FsEntry::File(File {
             path: path.to_string_lossy().to_string(),
-            size: metadata.len(),
+            size,
         }),
     );
 }
@@ -132,7 +132,7 @@ fn add_dir_to_fs_tree(fs_tree: &mut FsTree, path: &Path) -> u64 {
 
             if entry_metadata.is_file() {
                 dir_full_size += entry_metadata.len();
-                add_file_to_fs_tree(&mut content_fs_tree, &entry.path(), &entry_metadata);
+                add_file_to_fs_tree(&mut content_fs_tree, &entry.path(), entry_metadata.len());
             } else if entry_metadata.is_dir() {
                 dir_full_size += add_dir_to_fs_tree(&mut content_fs_tree, &entry.path());
             }
