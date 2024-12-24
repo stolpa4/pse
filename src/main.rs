@@ -10,5 +10,9 @@ fn main() {
 
     let size = proc::calculate_bulk_size(&args.path);
 
-    println!("Path: {}, size: {}", args.path.display(), utils::size_to_label(size));
+    println!(
+        "Path: {}, size: {}",
+        args.path.display(),
+        utils::size_to_label(size)
+    );
 }

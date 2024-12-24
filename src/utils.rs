@@ -3,8 +3,6 @@ const MIB: f64 = KIB * 1024.0;
 const GIB: f64 = MIB * 1024.0;
 const TIB: f64 = GIB * 1024.0;
 
-
-
 pub fn size_to_label(size: u64) -> String {
     if size < 1024 {
         return format!("{} bytes", size);
