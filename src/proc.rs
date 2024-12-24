@@ -2,14 +2,21 @@ use std::collections::{VecDeque, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+enum FsEntryType {
+    File,
+    Directory,
+}
+
 struct File {
     path: String,
     size: u64,
+    fs_type: FsEntryType,
 }
 
 struct Directory {
     path: String,
     size: u64,
+    fs_type: FsEntryType,
     content: HashMap<String, FsEntry>,
 }
 
@@ -95,6 +102,7 @@ pub fn build_fs_tree(path: &Path) -> FsTree {
         fs_tree.insert(path.to_string_lossy().to_string(), FsEntry::File(File {
             path: path.to_string_lossy().to_string(),
             size: metadata.len(),
+            fs_type: FsEntryType::File,
         }));
     } else if metadata.is_dir() {
         add_dir_to_fs_tree(&mut fs_tree, &path);
