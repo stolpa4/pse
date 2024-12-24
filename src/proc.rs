@@ -2,21 +2,14 @@ use std::collections::{HashMap, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-enum FsEntryType {
-    File,
-    Directory,
-}
-
 struct File {
     path: String,
     size: u64,
-    fs_type: FsEntryType,
 }
 
 struct Directory {
     path: String,
     size: u64,
-    fs_type: FsEntryType,
     content: HashMap<String, FsEntry>,
 }
 
@@ -110,11 +103,13 @@ pub fn build_fs_tree(path: &Path) -> FsTree {
 #[inline(always)]
 fn add_file_to_fs_tree(fs_tree: &mut FsTree, path: &Path, metadata: &fs::Metadata) {
     fs_tree.insert(
-        path.to_string_lossy().to_string(),
+        path.file_name()
+            .unwrap_or(path.as_os_str())
+            .to_string_lossy()
+            .to_string(),
         FsEntry::File(File {
             path: path.to_string_lossy().to_string(),
             size: metadata.len(),
-            fs_type: FsEntryType::File,
         }),
     );
 }
@@ -137,21 +132,20 @@ fn add_dir_to_fs_tree(fs_tree: &mut FsTree, path: &Path) -> u64 {
 
             if entry_metadata.is_file() {
                 dir_full_size += entry_metadata.len();
-                // TODO: relative paths
                 add_file_to_fs_tree(&mut content_fs_tree, &entry.path(), &entry_metadata);
             } else if entry_metadata.is_dir() {
-                // TODO: relative paths
-                // TODO: sum of the directory size
                 dir_full_size += add_dir_to_fs_tree(&mut content_fs_tree, &entry.path());
             }
         }
 
         fs_tree.insert(
-            path.to_string_lossy().to_string(),
+            path.file_name()
+                .unwrap_or(path.as_os_str())
+                .to_string_lossy()
+                .to_string(),
             FsEntry::Directory(Directory {
                 path: path.to_string_lossy().to_string(),
                 size: dir_full_size,
-                fs_type: FsEntryType::Directory,
                 content: content_fs_tree,
             }),
         );
