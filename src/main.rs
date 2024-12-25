@@ -9,11 +9,6 @@ fn main() {
         std::process::exit(1);
     });
 
-    let size = proc::calculate_bulk_size(&args.path);
-
-    println!(
-        "Path: {}, size: {}",
-        args.path.display(),
-        utils::size_to_label(size)
-    );
+    let fs_tree = proc::build_fs_tree(&args.path);
+    serialize::serialize_fs_tree(&fs_tree).expect("Failed to serialize fs tree");
 }

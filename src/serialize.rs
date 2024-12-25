@@ -1,46 +1,39 @@
-use crate::proc::FsTree;
-use std::fs;
+use crate::proc::{FsEntry, FsTree};
+use crate::utils::size_to_label;
+use serde::ser::{Serialize, SerializeMap, Serializer};
+use serde_json;
+use std::fs::File;
 use std::io;
-use std::io::Write;
-use std::path::Path;
 
-pub fn serialize_fs_tree<P: AsRef<Path>>(
-    fs_tree: &FsTree,
-    target_path: P,
-    human_readable: bool,
-) -> io::Result<()> {
-    let path: &Path = target_path.as_ref();
-    _create_parent(path)?;
-
-    let file = fs::File::create(path)?;
-    let mut writer = io::BufWriter::new(file);
-
-    let lines = vec![
-        "Hello, world!",
-        "This is a line with UTF-8 characters: ü, ñ, à, 漢字",
-        "Rust programming.",
-    ];
-
-    for line in lines {
-        // Write each line followed by a newline character
-        writeln!(writer, "{}", line)?;
-    }
-
-    // By this point, all writes have been buffered, ensure they're flushed to the file
-    writer.flush()?;
-
-    Ok(())
-}
-
-#[inline(always)]
-fn _create_parent(path: &Path) -> io::Result<()> {
-    if let Some(parent) = path.parent() {
-        if let Err(error) = fs::create_dir_all(parent) {
-            if error.kind() != io::ErrorKind::AlreadyExists {
-                return Err(error);
+impl Serialize for FsEntry {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match *self {
+            FsEntry::File(ref file) => {
+                let mut state = serializer.serialize_map(Some(2))?;
+                state.serialize_entry("type", "file")?;
+                state.serialize_entry("path", &file.path)?;
+                state.serialize_entry("size", &size_to_label(file.size))?;
+                state.end()
+            }
+            FsEntry::Directory(ref directory) => {
+                let mut state = serializer.serialize_map(Some(3))?;
+                state.serialize_entry("type", "directory")?;
+                state.serialize_entry("path", &directory.path)?;
+                state.serialize_entry("size", &size_to_label(directory.size))?;
+                state.serialize_entry("contents", &directory.content)?;
+                state.end()
             }
         }
     }
+}
 
+pub fn serialize_fs_tree(fs_tree: &FsTree) -> Result<(), io::Error> {
+    let file_path = "fs_tree.json";
+    let file = File::create(file_path)?;
+    serde_json::to_writer_pretty(file, fs_tree)?;
+    println!("JSON data was saved to {}", file_path);
     Ok(())
 }
