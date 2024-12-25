@@ -1,7 +1,7 @@
 mod cli;
 mod proc;
-mod utils;
 mod serialize;
+mod utils;
 
 fn main() {
     let args = cli::parse_arguments().unwrap_or_else(|err| {

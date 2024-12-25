@@ -36,21 +36,26 @@ pub fn calculate_bulk_size(path: &Path) -> u64 {
 
 #[inline(always)]
 fn _cbs_process_path(path: &Path) -> (u64, Vec<PathBuf>) {
-    let mut size = 0;
-    let mut subdirs = Vec::new();
-
     let metadata = match fs::metadata(path) {
         Ok(m) => m,
-        Err(_) => return (0, subdirs),
+        Err(_) => return (0, Vec::new()),
     };
 
     if metadata.is_file() {
-        return (metadata.len(), subdirs);
+        return (metadata.len(), Vec::new());
     }
 
     if !metadata.is_dir() {
-        return (0, subdirs);
+        return (0, Vec::new());
     }
+
+    _cbs_process_dir_path(path)
+}
+
+#[inline(always)]
+fn _cbs_process_dir_path(path: &Path) -> (u64, Vec<PathBuf>) {
+    let mut size = 0;
+    let mut subdirs = Vec::new();
 
     if let Ok(entries) = fs::read_dir(path) {
         for entry in entries.filter_map(Result::ok) {
