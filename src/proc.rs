@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::fs;
 use std::path::Path;
 
@@ -15,6 +16,22 @@ pub struct Directory {
 pub enum FsEntry {
     File(File),
     Directory(Directory),
+}
+
+impl FsEntry {
+    pub fn entry_type(&self) -> &str {
+        match self {
+            FsEntry::File(_) => "file",
+            FsEntry::Directory(_) => "directory",
+        }
+    }
+
+    pub fn size(&self) -> u64 {
+        match self {
+            FsEntry::File(file) => file.size,
+            FsEntry::Directory(directory) => directory.size,
+        }
+    }
 }
 
 pub type FsTree = Vec<FsEntry>;
@@ -41,6 +58,8 @@ pub fn build_fs_tree(path: &Path) -> FsTree {
     } else if metadata.is_dir() {
         add_dir_to_fs_tree(&mut fs_tree, &path);
     }
+
+    sort_fs_tree(&mut fs_tree);
 
     fs_tree
 }
@@ -89,4 +108,21 @@ fn add_dir_to_fs_tree(fs_tree: &mut FsTree, path: &Path) -> u64 {
     }
 
     dir_full_size
+}
+
+#[inline(always)]
+fn sort_fs_tree(fs_tree: &mut FsTree) {
+    fs_tree.sort_by(|a, b| {
+        let type_cmp = b.entry_type().cmp(&a.entry_type());
+        if type_cmp != Ordering::Equal {
+            return type_cmp;
+        }
+        b.size().cmp(&a.size())
+    });
+
+    for entry in fs_tree.iter_mut() {
+        if let FsEntry::Directory(ref mut directory) = entry {
+            sort_fs_tree(&mut directory.contents);
+        }
+    }
 }
