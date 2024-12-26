@@ -1,6 +1,6 @@
 [package]
 name = "pse"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["Alexey Stolpovsky <stolpa413@gmail.com>"]
 description = "Getting the recursive sizes of a fileitem"

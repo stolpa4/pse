@@ -4,7 +4,7 @@ Command-line utility for recursive size calculation of an arbitrary filesystem i
 
 ## How to install ##
 1. Install rust (if not installed already): [Here's the guide](https://www.rust-lang.org/tools/install)
-2. Run a command: `cargo install --git https://github.com/stolpa4/pse.git`
+2. Run a command: `cargo install --git https://github.com/stolpa4/pse.git --profile release`
 
 ## How to use ##
 Command: `pse <path> [<out_json_path>]`
@@ -24,6 +24,11 @@ Accepted formats:
  - `1 TB` - size in terabytes
 
 ## Release Notes ##
+### v1.0.1 ###
+- Documentation - usage example
+- Minor readme fix
+- Execution speed log
+
 ### v1.0.0 ###
 - Filesystem tree creation
 - JSON output
