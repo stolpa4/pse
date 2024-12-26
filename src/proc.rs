@@ -66,12 +66,10 @@ pub fn build_fs_tree(path: &Path) -> FsTree {
 
 #[inline(always)]
 fn add_file_to_fs_tree(fs_tree: &mut FsTree, path: &Path, size: u64) {
-    fs_tree.push(
-        FsEntry::File(File {
-            path: path.to_string_lossy().to_string(),
-            size,
-        }),
-    );
+    fs_tree.push(FsEntry::File(File {
+        path: path.to_string_lossy().to_string(),
+        size,
+    }));
 }
 
 #[inline(always)]
@@ -98,13 +96,11 @@ fn add_dir_to_fs_tree(fs_tree: &mut FsTree, path: &Path) -> u64 {
             }
         }
 
-        fs_tree.push(
-            FsEntry::Directory(Directory {
-                path: path.to_string_lossy().to_string(),
-                size: dir_full_size,
-                contents: content_fs_tree,
-            }),
-        );
+        fs_tree.push(FsEntry::Directory(Directory {
+            path: path.to_string_lossy().to_string(),
+            size: dir_full_size,
+            contents: content_fs_tree,
+        }));
     }
 
     dir_full_size

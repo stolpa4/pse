@@ -18,11 +18,11 @@ pub fn parse_arguments() -> io::Result<Arguments> {
 
     Ok(Arguments {
         path: _parse_input_path(&args[1])?,
-        out_path: if args.len() >= 3 {
-            _parse_output_path(&args[2])?
+        out_path: _parse_output_path(if args.len() >= 3 {
+            &args[2]
         } else {
-            PathBuf::from("fs_tree.json")
-        },
+            "fs_tree.json"
+        })?,
     })
 }
 
