@@ -3,15 +3,14 @@
 Command-line utility for recursive size calculation of an arbitrary filesystem item (symlinks are ignored).
 
 ## Motivation - Why you may need such a utility ##
-This tool simplifies the process of researching and cleaning any directory on your machine. If you have been using your 
-physical disk for a while, there is a high likelihood that it contains numerous unnecessary files and 
-artifacts. The output of this utility displays all the files and directories within the specified location 
-recursively (in a filesystem tree), sorted in descending order by size. You can use this information 
-to remove large, unused files from your directory.
+This tool simplifies the process of researching and cleaning any directory on your machine. Over time, your physical 
+disk likely accumulates many unnecessary files and artifacts. The output of this utility displays all the files and 
+directories within the specified location recursively (in a filesystem tree), sorted in descending order by size. 
+You can use this information to remove large, unused files from your directory.
 
 ## How to install ##
 1. Install rust (if not installed already): [Here's the guide](https://www.rust-lang.org/tools/install)
-2. Run a command: `cargo install --git https://github.com/stolpa4/pse.git --profile release`
+2. Run the command: `cargo install --git https://github.com/stolpa4/pse.git --profile release`
 
 ## How to use ##
 Command: `pse <path> [<out_json_path>]`
@@ -21,7 +20,7 @@ Command: `pse <path> [<out_json_path>]`
 ### Environment variables ###
 
 #### PSE_MINSIZE ####
-Minimum size threshold for a filesystem item to be included in the output json. By default is equal to `0 bytes`.
+Sets the minimum size threshold for filesystem items to be included in the output JSON. By default, is equal to `0 bytes`.
 
 Accepted formats: 
  - `123123 bytes` - size in bytes
