@@ -2,7 +2,61 @@
 name = "pse"
 version = "1.0.0"
 edition = "2021"
+authors = ["Lalal.ai ML Team <alexey.stolpovsky@lalal.ai>"]
+description = "Getting the recursive sizes of a fileitem"
+license = "UNLICENSE"
+readme = "README.md"
+repository = "https://github.com/stolpa4/pse"
+homepage = "https://yourhomepage.com"
+documentation = "https://docs.rs/pse"
+keywords = ["serde", "json", "serialization", "filesystem"]
+categories = ["data-structures", "serialization", "parsing"]
+workspace = "your-workspace-name" # only if your project is part of a workspace
 
 [dependencies]
 serde = { version = "1.0.216", features = ["derive"] }
 serde_json = "1.0.134"
+
+[dev-dependencies]
+# Add any dependencies that are only needed for tests or build scripts, e.g.:
+# anyhow = "1.0"
+
+[build-dependencies]
+# Add any dependencies needed specifically for build scripts
+
+[features]
+# Optional features can be added here
+# default = ["feature1", "feature2"]
+
+[badges]
+# e.g. appveyor, travis-ci, etc
+# travis-ci = { repository = "yourname/project" }
+
+[profile.release]
+# Customize release profile settings
+lto = true
+
+[[bin]]
+name = "pse"
+path = "src/main.rs"
+
+[lib]
+# Uncomment if your package is a library
+# name = "pse"
+# path = "src/lib.rs"
+
+[[example]]
+name = "example-project"
+path = "examples/example-project.rs"
+
+[[test]]
+name = "test_name"
+path = "tests/test_name.rs"
+
+[[bench]]
+name = "bench_name"
+path = "benches/bench_name.rs"
+
+[package.metadata.docs.rs]
+# Add specific metadata for docs.rs
+all-features = true
