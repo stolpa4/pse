@@ -94,16 +94,17 @@ fn add_dir_to_fs_tree(fs_tree: &mut FsTree, path: &Path, minsize: u64) -> u64 {
                     add_file_to_fs_tree(&mut content_fs_tree, &entry.path(), entry_metadata.len());
                 }
             } else if entry_metadata.is_dir() {
-                // TODO: how to exclude dir?
                 dir_full_size += add_dir_to_fs_tree(&mut content_fs_tree, &entry.path(), minsize);
             }
         }
 
-        fs_tree.push(FsEntry::Directory(Directory {
-            path: path.to_string_lossy().to_string(),
-            size: dir_full_size,
-            contents: content_fs_tree,
-        }));
+        if dir_full_size >= minsize {
+            fs_tree.push(FsEntry::Directory(Directory {
+                path: path.to_string_lossy().to_string(),
+                size: dir_full_size,
+                contents: content_fs_tree,
+            }));
+        }
     }
 
     dir_full_size
