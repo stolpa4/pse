@@ -1,14 +1,14 @@
 use std::cmp::Ordering;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub struct File {
-    pub path: String,
+    pub path: PathBuf,
     pub size: u64,
 }
 
 pub struct Directory {
-    pub path: String,
+    pub path: PathBuf,
     pub size: u64,
     pub contents: FsTree,
 }
@@ -67,7 +67,7 @@ pub fn build_fs_tree(path: &Path, minsize: u64) -> FsTree {
 #[inline(always)]
 fn add_file_to_fs_tree(fs_tree: &mut FsTree, path: &Path, size: u64) {
     fs_tree.push(FsEntry::File(File {
-        path: path.to_string_lossy().to_string(),
+        path: path.to_path_buf(),
         size,
     }));
 }
@@ -100,7 +100,7 @@ fn add_dir_to_fs_tree(fs_tree: &mut FsTree, path: &Path, minsize: u64) -> u64 {
 
         if dir_full_size >= minsize {
             fs_tree.push(FsEntry::Directory(Directory {
-                path: path.to_string_lossy().to_string(),
+                path: path.to_path_buf(),
                 size: dir_full_size,
                 contents: content_fs_tree,
             }));

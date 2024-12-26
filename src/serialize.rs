@@ -16,14 +16,27 @@ impl Serialize for FsEntry {
             FsEntry::File(ref file) => {
                 let mut state = serializer.serialize_map(Some(2))?;
                 state.serialize_entry("type", "file")?;
-                state.serialize_entry("path", &file.path)?;
+                state.serialize_entry(
+                    "name",
+                    &file.path.file_name().unwrap().to_string_lossy().to_string(),
+                )?;
+                state.serialize_entry("path", &file.path.to_string_lossy().to_string())?;
                 state.serialize_entry("size", &size_to_label(file.size))?;
                 state.end()
             }
             FsEntry::Directory(ref directory) => {
                 let mut state = serializer.serialize_map(Some(3))?;
                 state.serialize_entry("type", "directory")?;
-                state.serialize_entry("path", &directory.path)?;
+                state.serialize_entry(
+                    "name",
+                    &directory
+                        .path
+                        .file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                        .to_string(),
+                )?;
+                state.serialize_entry("path", &directory.path.to_string_lossy().to_string())?;
                 state.serialize_entry("size", &size_to_label(directory.size))?;
                 state.serialize_entry("contents", &directory.contents)?;
                 state.end()
