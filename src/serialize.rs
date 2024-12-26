@@ -14,7 +14,7 @@ impl Serialize for FsEntry {
     {
         match self {
             FsEntry::File(ref file) => {
-                let mut state = serializer.serialize_map(Some(2))?;
+                let mut state = serializer.serialize_map(Some(4))?;
                 state.serialize_entry("type", "file")?;
                 state.serialize_entry(
                     "name",
@@ -25,7 +25,7 @@ impl Serialize for FsEntry {
                 state.end()
             }
             FsEntry::Directory(ref directory) => {
-                let mut state = serializer.serialize_map(Some(3))?;
+                let mut state = serializer.serialize_map(Some(5))?;
                 state.serialize_entry("type", "directory")?;
                 state.serialize_entry(
                     "name",
@@ -47,14 +47,14 @@ impl Serialize for FsEntry {
 
 pub fn serialize_fs_tree<P: AsRef<Path>>(path: P, fs_tree: &FsTree) -> Result<(), io::Error> {
     let path: &Path = path.as_ref();
-    _create_parent(path)?;
+    create_parent(path)?;
     let file = File::create(path)?;
     serde_json::to_writer_pretty(file, fs_tree)?;
     Ok(())
 }
 
 #[inline(always)]
-fn _create_parent(path: &Path) -> io::Result<()> {
+fn create_parent(path: &Path) -> io::Result<()> {
     if let Some(parent) = path.parent() {
         if let Err(error) = fs::create_dir_all(parent) {
             if error.kind() != io::ErrorKind::AlreadyExists {

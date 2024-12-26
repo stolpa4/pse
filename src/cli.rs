@@ -16,25 +16,25 @@ pub fn parse_arguments() -> io::Result<Arguments> {
             io::ErrorKind::InvalidInput,
             format!(
                 "PSE: Getting the recursive sizes of a fileitem\n\
-            Usage: {} <path> [<out_json_path>]\n\
-            Default out_json_path: $(pwd)/fs_tree.json\n\
-            ENV VARIABLES:\n\
-            |* PSE_MINSIZE - fileitem minimum size threshold\n\
-            |    accepted formats:\n\
-            |      '123123 bytes' - size in bytes\n\
-            |      '100 KB' - size in kilobytes\n\
-            |      '10 MB' - size in megabytes\n\
-            |      '1 GB' - size in gigabytes\n\
-            |      '1 TB' - size in terabytes\n\
-            |    default value: 0 bytes",
+                 Usage: {} <path> [<out_json_path>]\n\
+                 Default out_json_path: $(pwd)/fs_tree.json\n\
+                 ENV VARIABLES:\n\
+                 |* PSE_MINSIZE - fileitem minimum size threshold\n\
+                 |    accepted formats:\n\
+                 |      '123123 bytes' - size in bytes\n\
+                 |      '100 KB' - size in kilobytes\n\
+                 |      '10 MB' - size in megabytes\n\
+                 |      '1 GB' - size in gigabytes\n\
+                 |      '1 TB' - size in terabytes\n\
+                 |    default value: 0 bytes",
                 args[0]
             ),
         ));
     }
 
     Ok(Arguments {
-        path: _parse_input_path(&args[1])?,
-        out_path: _parse_output_path(if args.len() >= 3 {
+        path: parse_input_path(&args[1])?,
+        out_path: parse_output_path(if args.len() >= 3 {
             &args[2]
         } else {
             "fs_tree.json"
@@ -44,12 +44,12 @@ pub fn parse_arguments() -> io::Result<Arguments> {
 }
 
 #[inline(always)]
-fn _parse_input_path(path_arg: &str) -> io::Result<PathBuf> {
+fn parse_input_path(path_arg: &str) -> io::Result<PathBuf> {
     fs::canonicalize(Path::new(path_arg))
 }
 
 #[inline(always)]
-fn _parse_output_path(path_arg: &str) -> io::Result<PathBuf> {
+fn parse_output_path(path_arg: &str) -> io::Result<PathBuf> {
     let path = Path::new(path_arg);
 
     // NOTE: I need to do it by hand, as canonicalize will raise a error if the path does not exist
