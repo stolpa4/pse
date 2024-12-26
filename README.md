@@ -23,6 +23,47 @@ Accepted formats:
  - `1 GB` - size in gigabytes
  - `1 TB` - size in terabytes
 
+## Usage Example ##
+Command
+```
+PSE_MINSIZE='50 KB' pse .
+```
+Output:
+```
+Compiling the filesystem tree for /.../pse ...
+Compilation ended in 0.003 seconds
+Serializing the compiled fs tree ...
+Serialization ended in 0.001 seconds. JSON data was saved to /.../fs_tree.json
+```
+fs_tree.json:
+```json
+[
+  {
+    "type": "directory",
+    "name": "pse",
+    "path": "/.../pse",
+    "size": "145.8330 KB",
+    "contents": [
+      {
+        "type": "directory",
+        "name": ".git",
+        "path": "/.../pse/.git",
+        "size": "107.3691 KB",
+        "contents": [
+          {
+            "type": "directory",
+            "name": "objects",
+            "path": "/.../pse/.git/objects",
+            "size": "66.0195 KB",
+            "contents": []
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
 ## Release Notes ##
 ### v1.0.1 ###
 - Documentation - usage example
