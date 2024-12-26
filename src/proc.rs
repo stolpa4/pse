@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
@@ -10,7 +9,7 @@ pub struct File {
 pub struct Directory {
     pub path: String,
     pub size: u64,
-    pub content: HashMap<String, FsEntry>,
+    pub contents: FsTree,
 }
 
 pub enum FsEntry {
@@ -18,7 +17,7 @@ pub enum FsEntry {
     Directory(Directory),
 }
 
-pub type FsTree = HashMap<String, FsEntry>;
+pub type FsTree = Vec<FsEntry>;
 
 pub fn build_fs_tree(path: &Path) -> FsTree {
     let mut fs_tree = FsTree::new();
@@ -48,11 +47,7 @@ pub fn build_fs_tree(path: &Path) -> FsTree {
 
 #[inline(always)]
 fn add_file_to_fs_tree(fs_tree: &mut FsTree, path: &Path, size: u64) {
-    fs_tree.insert(
-        path.file_name()
-            .unwrap_or(path.as_os_str())
-            .to_string_lossy()
-            .to_string(),
+    fs_tree.push(
         FsEntry::File(File {
             path: path.to_string_lossy().to_string(),
             size,
@@ -84,15 +79,11 @@ fn add_dir_to_fs_tree(fs_tree: &mut FsTree, path: &Path) -> u64 {
             }
         }
 
-        fs_tree.insert(
-            path.file_name()
-                .unwrap_or(path.as_os_str())
-                .to_string_lossy()
-                .to_string(),
+        fs_tree.push(
             FsEntry::Directory(Directory {
                 path: path.to_string_lossy().to_string(),
                 size: dir_full_size,
-                content: content_fs_tree,
+                contents: content_fs_tree,
             }),
         );
     }

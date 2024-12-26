@@ -1,31 +1,11 @@
 use crate::proc::{FsEntry, FsTree};
 use crate::utils::size_to_label;
-use std::collections::BTreeMap;
-use std::cmp::Reverse;
 use serde::ser::{Serialize, SerializeMap, Serializer};
 use serde_json;
 use std::fs;
 use std::fs::File;
 use std::io;
 use std::path::Path;
-
-impl FsEntry {
-    fn convert_to_btreemap(& self) -> BTreeMap<(Reverse<u64>, &String), &FsEntry> {
-        let mut map = BTreeMap::new();
-        if let FsEntry::Directory(ref directory) = *self {
-            for (name, entry) in &directory.content {
-                let size = match entry {
-                    FsEntry::File(f) => f.size,
-                    FsEntry::Directory(d) => d.size,
-                };
-                // NOTE: Use Reverse to sort by descending order
-                map.insert((Reverse(size), name), entry);
-            }
-        }
-        map
-    }
-}
-
 
 impl Serialize for FsEntry {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -41,12 +21,11 @@ impl Serialize for FsEntry {
                 state.end()
             }
             FsEntry::Directory(ref directory) => {
-                let sorted_contents = self.convert_to_btreemap();
                 let mut state = serializer.serialize_map(Some(3))?;
                 state.serialize_entry("type", "directory")?;
                 state.serialize_entry("path", &directory.path)?;
                 state.serialize_entry("size", &size_to_label(directory.size))?;
-                state.serialize_entry("contents", &sorted_contents)?;
+                state.serialize_entry("contents", &directory.contents)?;
                 state.end()
             }
         }
