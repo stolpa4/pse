@@ -36,7 +36,7 @@ impl FsEntry {
 
 pub type FsTree = Vec<FsEntry>;
 
-pub fn build_fs_tree(path: &Path) -> FsTree {
+pub fn build_fs_tree(path: &Path, minsize: u64) -> FsTree {
     let mut fs_tree = FsTree::new();
 
     let path = match path.canonicalize() {
@@ -53,10 +53,10 @@ pub fn build_fs_tree(path: &Path) -> FsTree {
         return fs_tree;
     }
 
-    if metadata.is_file() {
+    if metadata.is_file() && metadata.len() >= minsize {
         add_file_to_fs_tree(&mut fs_tree, &path, metadata.len());
     } else if metadata.is_dir() {
-        add_dir_to_fs_tree(&mut fs_tree, &path);
+        add_dir_to_fs_tree(&mut fs_tree, &path, minsize);
     }
 
     sort_fs_tree(&mut fs_tree);
@@ -73,7 +73,7 @@ fn add_file_to_fs_tree(fs_tree: &mut FsTree, path: &Path, size: u64) {
 }
 
 #[inline(always)]
-fn add_dir_to_fs_tree(fs_tree: &mut FsTree, path: &Path) -> u64 {
+fn add_dir_to_fs_tree(fs_tree: &mut FsTree, path: &Path, minsize: u64) -> u64 {
     let mut content_fs_tree = FsTree::new();
     let mut dir_full_size = 0;
 
@@ -90,9 +90,12 @@ fn add_dir_to_fs_tree(fs_tree: &mut FsTree, path: &Path) -> u64 {
 
             if entry_metadata.is_file() {
                 dir_full_size += entry_metadata.len();
-                add_file_to_fs_tree(&mut content_fs_tree, &entry.path(), entry_metadata.len());
+                if entry_metadata.len() >= minsize {
+                    add_file_to_fs_tree(&mut content_fs_tree, &entry.path(), entry_metadata.len());
+                }
             } else if entry_metadata.is_dir() {
-                dir_full_size += add_dir_to_fs_tree(&mut content_fs_tree, &entry.path());
+                // TODO: how to exclude dir?
+                dir_full_size += add_dir_to_fs_tree(&mut content_fs_tree, &entry.path(), minsize);
             }
         }
 
