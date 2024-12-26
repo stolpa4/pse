@@ -1,6 +1,13 @@
-# PSE #
+# PSE (Partition Size Estimator) #
 
 Command-line utility for recursive size calculation of an arbitrary filesystem item (symlinks are ignored).
+
+## Motivation - Why you may need such a utility ##
+This tool simplifies the process of researching and cleaning any directory on your machine. If you have been using your 
+physical disk for a while, there is a high likelihood that it contains numerous unnecessary files and 
+artifacts. The output of this utility displays all the files and directories within the specified location 
+recursively (in a filesystem tree), sorted in descending order by size. You can use this information 
+to remove large, unused files from your directory.
 
 ## How to install ##
 1. Install rust (if not installed already): [Here's the guide](https://www.rust-lang.org/tools/install)
