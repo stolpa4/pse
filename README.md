@@ -69,6 +69,7 @@ fs_tree.json:
 - Documentation - usage example
 - Minor readme fix
 - Execution speed log
+- Minor code refactoring and bugfixes
 
 ### v1.0.0 ###
 - Filesystem tree creation
